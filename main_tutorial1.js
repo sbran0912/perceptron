@@ -1,5 +1,5 @@
-//import lodashEs from 'https://cdn.skypack.dev/lodash-es';
-import * as utils from './lib-utils.js';
+import lodashEs from 'https://cdn.skypack.dev/lodash-es';
+//import * as utils from './lib-utils.js';
 
 /** 
  * @param {number[]} inputs 
@@ -36,7 +36,7 @@ let training = [
 
 // let targets = [1.0, 1.0, 1.0, 0.0]; // gut gut gut schlecht
 let targets = [1.0, 1.0, 0.0, 0.0]; // gut gut schlecht schlecht
-let index = utils.range(targets.length); //array mit Zahlenreihenfolge 0 .. length-1
+let index = lodashEs.range(targets.length); //array mit Zahlenreihenfolge 0 .. length-1
 
 // Gewichte per Zufall festlegen
 for (let i = 0; i < 3; i++) {
@@ -47,7 +47,7 @@ console.log(weights);
 
 for (let e = 0; e < anzahl_epochen; e++) {
     console.log("Starte Trainingsepoche ", e);
-    let indexShuffle = utils.shuffle(index); // Die Reihenfolge der Trainigsdaten muss gemischt werden
+    let indexShuffle = lodashEs.shuffle(index); // Die Reihenfolge der Trainigsdaten muss gemischt werden
     
     for (const i of indexShuffle) {
         inputs = training[i];
