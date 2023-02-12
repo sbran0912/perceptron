@@ -229,8 +229,8 @@ export function range(len) {
   return arr;
 }
 /** make shuffled copy of arr
- * @param {number[]|string[]} arr 
- * @returns {number[]|string[]}
+ * @param {number[]} arr 
+ * @returns {number[]}
  */
 export function shuffle(arr) {
   let a = arr.slice();
