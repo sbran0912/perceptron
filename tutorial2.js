@@ -1,4 +1,5 @@
 import * as utils from './lib-utils.js';
+import plot from 'https://cdn.skypack.dev/plotly.js-basic-dist-min';
 
 async function readData() {
     /** @type {string[][]} */
@@ -8,7 +9,7 @@ async function readData() {
     let target = source.map(row => {
         let columns = row.map((col, i) => {
             if (i == 60) {
-                col = col == 'R' ? '1' : '0';
+                col = col == 'R' ? '0' : '1';
             }
             return parseFloat(col);
         });
@@ -41,40 +42,44 @@ function heavyside(x) {
 /** @type {number[]} */
 let weights = [];
 let alpha = 0.1;
-let anzahl_epochen = 30;
-let max_training = 50;
-
-/** @type {number[][]} */
-let training = new Array(max_training);
-
-/** @type {number[]} */
-let targets = new Array(max_training);
+let anzahl_epochen = 2000;
+let anzahl_training = 180;
 
 let data = await readData();
+let idx_shuffled = utils.shuffle(utils.range(data.length)); //Trainingsdaten sollen per Zufall gezogen werden
 
-let idx_data = utils.range(data.length); 
-let shuffle_idx = utils.shuffle(idx_data); //Trainingsdaten sollen per Zufall gezogen werden
-
-// Gewichte per Zufall festlegen
-for (let i = 0; i < 61; i++) {
-    weights.push(Math.random()-Math.random());
+/**
+ * 
+ * @param {number} target 
+ * @param {number[]} input 
+ */
+let sonar = function(target, input) {
+    return {
+        target, 
+        input
+    }
 }
 
+let training = new Array(anzahl_training);
+
 // Trainigsdaten einlesen
-for (let i = 0; i < max_training; i++) {
-     training[i] = data[shuffle_idx[i]].slice(0, 61);
-     targets[i] = data[shuffle_idx[i]][61];
+for (let i = 0; i < idx_shuffled.length; i++) {
+     training[i] = sonar(data[idx_shuffled[i]][61], data[idx_shuffled[i]].slice(0, 61));
 }
 
 // Training starten
-let idx_training = utils.range(max_training);
+for (let i = 0; i < 61; i++) {
+    weights.push(Math.random()-Math.random()); // Gewichte per Zufall festlegen
+}
+
+let idx_training = utils.range(anzahl_training);
 
 for (let e = 0; e < anzahl_epochen; e++) {       
-    let shuffled = utils.shuffle(idx_training); // Die Reihenfolge der Trainigsdaten muss gemischt werden
+    let training_shuffled = utils.shuffle(idx_training); // Die Reihenfolge der Trainigsdaten muss gemischt werden
     
-    for (const idx of shuffled) {
-        let inputs = training[idx];
-        let target = targets[idx];
+    for (const i of training_shuffled) {
+        let inputs = training[i].input;
+        let target = training[i].target;
 
         let output = heavyside(scalarprodukt(inputs, weights));
         let delta = target - output;         
@@ -84,12 +89,27 @@ for (let e = 0; e < anzahl_epochen; e++) {
     }
 }
 
-// Training testen
+// Trefferquote mit Kontrolldaten ermitteln
 let treffer = 0;
-for (const row of data) {
-    let output = heavyside(scalarprodukt(row.slice(0, 61), weights));
-    if ((row[61] - output) == 0) {
+
+for (let i = anzahl_training; i < idx_shuffled.length; i++) {
+    let output = heavyside(scalarprodukt(training[i].input, weights));
+    if ((training[i].target - output) == 0) {
         treffer++;
     }
 }
-console.log (`${treffer} Treffer von ${data.length} Datensätzen, wobei ${max_training} Sätze trainiert wurden mit ${anzahl_epochen} Wiederholungen`);
+
+//Plotten von einem Sonarbeispiel
+let dataForPlot = [
+    {
+        type: 'scatter',
+        mode: 'lines',  
+        name: 'Serie A',
+        line: { width: 1 },    
+        y: training[50].input
+    }
+];
+
+plot.newPlot('plotter', dataForPlot, {margin: {t: 0}});
+
+console.log (`${treffer} Treffer von ${idx_shuffled.length - anzahl_training} Datensätzen, wobei ${anzahl_training} Sätze trainiert wurden mit ${anzahl_epochen} Wiederholungen`);
