@@ -1,5 +1,5 @@
 import * as utils from './lib-utils.js';
-import plot from 'https://cdn.skypack.dev/plotly.js-basic-dist-min';
+import plot from './plotly-basic-dist-min.js';
 
 async function readData() {
     /** @type {string[][]} */
@@ -46,14 +46,14 @@ let anzahl_epochen = 2000;
 let anzahl_training = 180;
 
 let data = await readData();
-let idx_shuffled = utils.shuffle(utils.range(data.length)); //Trainingsdaten sollen per Zufall gezogen werden
+let idx_shuffled = utils.shuffle(utils.range(0, data.length, 1)); //Trainingsdaten sollen per Zufall gezogen werden
 
 /**
  * 
  * @param {number} target 
  * @param {number[]} input 
  */
-let sonar = function(target, input) {
+let createFields = function(target, input) {
     return {
         target, 
         input
@@ -64,7 +64,7 @@ let training = new Array(anzahl_training);
 
 // Trainigsdaten einlesen
 for (let i = 0; i < idx_shuffled.length; i++) {
-     training[i] = sonar(data[idx_shuffled[i]][61], data[idx_shuffled[i]].slice(0, 61));
+     training[i] = createFields(data[idx_shuffled[i]][61], data[idx_shuffled[i]].slice(0, 61));
 }
 
 // Training starten
@@ -72,7 +72,7 @@ for (let i = 0; i < 61; i++) {
     weights.push(Math.random()-Math.random()); // Gewichte per Zufall festlegen
 }
 
-let idx_training = utils.range(anzahl_training);
+let idx_training = utils.range(0, anzahl_training, 1);
 
 for (let e = 0; e < anzahl_epochen; e++) {       
     let training_shuffled = utils.shuffle(idx_training); // Die Reihenfolge der Trainigsdaten muss gemischt werden
